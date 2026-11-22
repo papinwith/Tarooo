@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ไพ่ทาโรต์กระจกสีโฮโลแกรม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Sriracha&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="xmas" aria-hidden="true"></div>
+<canvas id="dust" aria-hidden="true"></canvas>
+<canvas id="fx" aria-hidden="true"></canvas>
+<header>
+ <div class="brand">✦ ARCANA ✦</div>
+ <h1>ไพ่ทาโรต์กระจกสีโฮโลแกรม</h1>
+ <div class="info" id="info"></div>
+</header>
+<main class="stage" id="stage">
+ <div class="glow"></div>
+ <div class="aura" id="aura"></div>
+ <div class="rays" id="rays"></div>
+ <div class="shock" id="shock"></div>
+ <div class="beam" id="beam"></div>
+ <div class="xmas-banner" id="xmasBanner">🎄 Merry Christmas 🎄</div>
+ <img class="spirit" id="spirit" alt="" aria-hidden="true">
+ <div class="card" id="card" tabindex="0" role="button" aria-label="ไพ่ทาโรต์ แตะเพื่อเปิดคำทำนาย">
+  <div class="float idle" id="float">
+   <div class="tilt">
+    <div class="spin">
+     <div class="edge" style="transform:translateZ(-2px)"></div>
+     <div class="edge" style="transform:translateZ(-1px)"></div>
+     <div class="edge" style="transform:translateZ(0)"></div>
+     <div class="edge" style="transform:translateZ(1px)"></div>
+     <div class="edge" style="transform:translateZ(2px)"></div>
+     <div class="face back"><img id="backImg" alt=""></div>
+     <div class="face front" id="front">
+      <img id="art" alt="">
+      <div class="holo rainbow"></div><div class="holo irid"></div><div class="holo sparkle"></div>
+      <div class="holo scan"></div><div class="holo band"></div><div class="holo spot"></div>
+      <div id="twinkles"></div>
+      <div class="sweep" id="sweep"></div>
+      <div class="numeral" id="numeral"></div>
+      <div class="name"><span id="name"></span></div>
+      <div class="fortune" id="fortune"><span id="ftext"></span></div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <button type="button" class="pile empty" id="pile"><div class="pile-stack"></div><span class="pile-n">0</span><span class="pile-label">กองที่สุ่มแล้ว</span></button>
+ <div class="arcfx" id="arcfx" aria-hidden="true"><div class="rainbow-arc"></div><div class="ring" id="ring"></div></div>
+ <div class="arc-ptr" id="arcPtr" aria-hidden="true">▼</div>
+ <canvas id="three3d" aria-hidden="true"></canvas>
+ <div class="wan-tag chibi-tag" id="chibiTag">✨ น้องหวาน ✨</div>
+</main>
+<footer>
+  <div class="deck-left" id="deckLeft"></div>
+ <p class="hint" id="hint">แตะไพ่เพื่อเปิดคำทำนาย</p>
+ <div class="btns">
+  <button id="shuffleBtn" class="primary" type="button"><span class="ic">🔮</span> สุ่มไพ่</button>
+ </div>
+</footer>
+<div class="hist" id="hist" hidden><div class="hist-box"><div class="hist-h"><b></b><button type="button" class="hist-close">✕ ปิด</button></div><div class="hist-list"></div></div></div>
+<div id="toast" role="status"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+<script>
