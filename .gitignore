@@ -1,1 +1,12 @@
 node_modules/
+requrement.md
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.ico
+*.svg
+*.avif
+img/
