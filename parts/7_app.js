@@ -178,6 +178,3 @@ histEl.addEventListener('click',e=>{if(e.target===histEl||e.target.closest('.his
 renderPile();
 if(location.hash.includes('again'))setTimeout(()=>shuffle(),9000);
 if(location.hash.includes('histopen'))setTimeout(()=>pileEl.click(),11000); // test hook // test hook: second draw -> first card goes to the pile
-</script>
-</body>
-</html>
