@@ -8,7 +8,7 @@
 // =====================================================================================================
 const RAR=[{k:'C',th:'ธรรมดา',star:'●',col:'#d7dcea'},{k:'R',th:'หายาก',star:'◆',col:'#5fb4ff'},
  {k:'SR',th:'หายากมาก',star:'★',col:'#b58cff',foil:1},{k:'UR',th:'หายากสุดๆ',star:'★★',col:'#ffd35a',foil:1},{k:'SP',th:'พิเศษ',star:'✦',col:'#ff6fd8',foil:1}];
-// rarity is set per deity in 4_deities.js
+// rarity: set per deity in 4_deities.js · for the tarot deck by tarotRar() in 7_app.js
 const TIER=[0,1,2,3,4].map(t=>deck.map((_,i)=>i).filter(i=>deck[i].rar===t));
 const PACK_PRICE=49,PACK_SIZE=5,PER_CARD=PACK_PRICE/PACK_SIZE,BOX_PACKS=20;
 const exactPrice=t=>PER_CARD*Math.pow(1.1,t+1);        // 9.80 × 1.1^(tier+1): +10% compounded per rarity step
@@ -18,9 +18,11 @@ const baht=n=>n.toLocaleString('th-TH')+'฿';
 const thumb=(i,extra='')=>{const t=deck[i].rar,R=RAR[t];return`<div class="tc r${t}" title="${deck[i].th} · ${R.th}"><img src="${faceURL(i)}" alt="${deck[i].th}" loading="lazy"><span class="rb">${R.star} ${R.k}</span>${extra}</div>`};
 
 // ---------- collection (per-viewer, this browser only) ----------
+// each deck keeps its own collection (the deity deck keeps the original key)
+const COL_KEY=DECK_ID==='tarot'?'arcana_col_tarot':'arcana_col';
 let COL={own:{},spent:0};
-try{const s=JSON.parse(localStorage.getItem('arcana_col')||'null');if(s&&s.own)COL=s}catch(_){}
-const saveCol=()=>{try{localStorage.setItem('arcana_col',JSON.stringify(COL))}catch(_){}};
+try{const s=JSON.parse(localStorage.getItem(COL_KEY)||'null');if(s&&s.own)COL=s}catch(_){}
+const saveCol=()=>{try{localStorage.setItem(COL_KEY,JSON.stringify(COL))}catch(_){}};
 const ownedKinds=()=>Object.keys(COL.own).filter(k=>COL.own[k]>0).length;
 function addCards(ids,cost){const fresh=new Set();ids.forEach(i=>{if(!COL.own[i])fresh.add(i);COL.own[i]=(COL.own[i]||0)+1});COL.spent+=cost;saveCol();updSpent();return fresh}
 
@@ -40,7 +42,7 @@ const mkBtn=(txt,fn)=>{const b=document.createElement('button');b.type='button';
 
 // ---------- item 20: pick any card ----------
 const pk=overlay('pickOv','🃏 เลือกไพ่ที่อยากเปิด');
-function openPicker(){const groups=CATS.map((c,k)=>[c.th,deck.map((_,i)=>i).filter(i=>deck[i].cat===k)]).filter(g=>g[1].length);
+function openPicker(){const groups=DECK_GROUPS.map(([t,k])=>[t,deck.map((_,i)=>i).filter(i=>deck[i].cat===k)]).filter(g=>g[1].length);
  pk.querySelector('.ovl-sub').textContent='แตะไพ่ 1 ใบ';
  pk.querySelector('.ovl-body').innerHTML=groups.map(([t,ids])=>`<h3>${t}</h3><div class="tgrid">${ids.map(i=>`<button type="button" class="tbtn" data-i="${i}">${thumb(i)}<span class="tn">${deck[i].th}</span></button>`).join('')}</div>`).join('');
  pk.hidden=false}
@@ -58,9 +60,9 @@ sh.querySelector('.ovl-tabs').innerHTML=TABS.map(([k,t])=>`<button type="button"
 const shBody=sh.querySelector('.ovl-body');let tab='pack',filt=-1;
 function updSpent(){sh.querySelector('.ovl-sub').textContent=`ยอดซื้อจำลอง ${baht(COL.spent)} · สะสม ${ownedKinds()}/${deck.length}`}
 const rarTable=()=>`<table class="rtab"><tr><th>ระดับ</th><th>ไพ่</th><th>จำนวน</th><th>ราคาปลีก/ใบ</th></tr>${RAR.map((R,t)=>`<tr>
- <td><span class="chip r${t}">${R.star} ${R.k}</span> ${R.th}${R.foil?' · ฟอยล์':''}</td><td>${['เทพองค์รอง','เทพที่คนรู้จัก','เทพเด่น','เทพผู้ยิ่งใหญ่','ที่สุดของหมวด'][t]}</td>
+ <td><span class="chip r${t}">${R.star} ${R.k}</span> ${R.th}${R.foil?' · ฟอยล์':''}</td><td>${(DECK_ID==='tarot'?['เลข 2–10','Ace · Page · Knight','Queen · King + ชุดใหญ่ 10 ใบ','ชุดใหญ่ 10 ใบเด่น','The Fool · The World']:['เทพองค์รอง','เทพที่คนรู้จัก','เทพเด่น','เทพผู้ยิ่งใหญ่','ที่สุดของหมวด'])[t]}</td>
  <td>${TIER[t].length}</td><td><b>${baht(priceOf(t))}</b> <small>(${exactPrice(t).toFixed(2)})</small></td></tr>`).join('')}</table>
- <p class="note">เกรดจัดตามความดังของแต่ละองค์ — ทุกหมวด (ความมั่งคั่ง · สติปัญญา · ความรัก · แสงสว่าง · ความกล้าหาญ · สุขภาพ) มีครบ C / R / SR / UR / SP</p>
+ ${DECK_ID==='tarot'?'<p class="note">ไพ่ชุดใหญ่ทุกใบเป็นฟอยล์ (SR ขึ้นไป) — The Fool กับ The World เป็นใบพิเศษ ✦ SP</p>':'<p class="note">เกรดจัดตามความดังของแต่ละองค์ — ทุกหมวด (ความมั่งคั่ง · สติปัญญา · ความรัก · แสงสว่าง · ความกล้าหาญ · สุขภาพ) มีครบ C / R / SR / UR / SP</p>'}
  <p class="note">ราคาหน้าซองต่อใบ = 49 ÷ 5 = 9.80฿ · ราคาปลีก = 9.80 × 1.1 ยกกำลัง (ระดับ) — บวก 10% ทบทุกระดับ แล้วปัดขึ้นเป็นบาท</p>`;
 function packCards(){const p=[];for(let k=0;k<3;k++)p.push(0);p.push(1);{const q=Math.random();p.push(q<.70?2:q<.94?3:4)} // chase slot: SR 70% · UR 24% · SP 6%
  
@@ -126,3 +128,9 @@ if(location.hash.includes('shopall'))setTimeout(()=>{const out=[];for(const t of
  try{openPicker();out.push('picker:'+pk.querySelectorAll('.tbtn').length)}catch(e){out.push('picker ERR '+e.message)}
  out.push('price:'+[0,1,2,3,4].map(priceOf).join('/')+' set:'+SET_PRICE+' tiers:'+TIER.map(a=>a.length).join('/'));document.body.setAttribute('data-shop',out.join(' | '))},500); // test hook
 if(location.hash.includes('pickone'))setTimeout(()=>{openPicker();pk.querySelector('.tbtn[data-i="40"]').click()},7000); // test hook
+
+// ---------- switch between the two decks (เทพ ⇄ ไพ่ทาโรต์); the page reloads with ?deck=… ----------
+{const other=DECK_ID==='tarot'?'deity':'tarot';
+ document.title=DECKS[DECK_ID].title;const h1=document.querySelector('header h1');if(h1)h1.textContent=DECKS[DECK_ID].title;
+ document.body.dataset.deck=DECK_ID;
+ const b=mkBtn(`🔁 เปลี่ยนเป็น${DECKS[other].name}`,()=>switchDeck(other));b.title=`ตอนนี้: ${DECKS[DECK_ID].name} (${deck.length} ใบ)`}

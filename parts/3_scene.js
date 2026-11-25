@@ -52,6 +52,45 @@ function crown(hx,y,p){const g=p.halo;let s=rect(hx-18,y-6,hx+18,y,g[0],1.5);
  for(let k=0;k<5;k++){const x0=hx-18+k*7.2;s+=P([[x0,y-6],[x0+3.6,y-(k%2?14:19)],[x0+7.2,y-6]],k%2?g[1]:g[2],1.4)}
  return s+P(circ(hx,y-3,2.4,2.4,8),'#e8344e',1)+P(circ(hx-10,y-3,1.8,1.8,8),'#4fd1ff',.9)+P(circ(hx+10,y-3,1.8,1.8,8),'#4fd1ff',.9)}
 
+// Tarot figure (the original cloaked half-length figure, used by the tarot deck)
+function figureT(sp,p,r){const hx=136,hy=128,sk='#f6dcc8',sk2='#e9c3a8',H=p.hair,cl=p.cloak,gw=p.gown;let s='';
+ const mir=a=>a.map(([x,y])=>[2*hx-x,y]);
+ // cloak + gown, split along the folds
+ const cc=[cl[0],cl[1],cl[2],cl[1]],gc=[gw[0],gw[1],gw[2],gw[1]];
+ s+=grid(t=>[hx-26-70*Math.pow(t,.8),hy+40+(392-hy-40)*t],t=>[hx+26+70*Math.pow(t,.8),hy+40+(392-hy-40)*t],8,3,(i,j)=>cc[(i+j)%4]);
+ s+=grid(t=>[hx-15-20*t,hy+48+(392-hy-48)*t],t=>[hx+15+20*t,hy+48+(392-hy-48)*t],4,3,(i,j)=>gc[(i+j+1)%4]);
+ s+=P([[hx-7,hy+18],[hx+7,hy+18],[hx+8,hy+36],[hx-8,hy+36]],sk2,1.5);
+ // shawl
+ const s1=[[hx-12,hy+30],[hx,hy+38],[hx-4,hy+66],[hx-26,hy+50]],s2=[[hx-26,hy+50],[hx-4,hy+66],[hx-20,hy+74],[hx-48,hy+62],[hx-42,hy+48]];
+ s+=P(s1,cl[2])+P(s2,cl[1])+P(mir(s1),cl[1])+P(mir(s2),cl[2])+P(circ(hx,hy+42,4,4,10),GOLD[1],1.3);
+ // back hair
+ const hc=[H[0],H[1],H[2],H[1]];
+ if(!sp.hood&&!sp.helm){const o=[[hx,hy-36],[hx-20,hy-32],[hx-31,hy-16],[hx-34,hy+8],[hx-37,hy+34],[hx-42,hy+62]],
+   n=[[hx,hy-27],[hx-14,hy-24],[hx-21,hy-12],[hx-22,hy+8],[hx-20,hy+30],[hx-16,hy+58]];
+  s+=grid(poly(o),poly(n),3,5,(i,j)=>hc[(i+j)%4],1.7)+grid(poly(mir(o)),poly(mir(n)),3,5,(i,j)=>hc[(i+j+1)%4],1.7)}
+ // sleeves + hands
+ if(sp.pose==='pray'){const sl=[[hx-42,hy+60],[hx-14,hy+92],[hx-12,hy+116],[hx-32,hy+122],[hx-52,hy+92]],cu=[[hx-14,hy+92],[hx-9,hy+96],[hx-8,hy+114],[hx-12,hy+116]];
+  s+=P(sl,cl[1])+P(mir(sl),cl[2])+P(cu,gw[2],1.4)+P(mir(cu),gw[2],1.4);
+  s+=P([[hx,hy+64],[hx-10,hy+88],[hx-9,hy+110],[hx,hy+112]],sk,1.6)+P([[hx,hy+64],[hx+10,hy+88],[hx+9,hy+110],[hx,hy+112]],sk2,1.6);
+ }else{const sl=[[hx-42,hy+60],[hx-16,hy+110],[hx-14,hy+132],[hx-36,hy+136],[hx-54,hy+100]];
+  s+=P(sl,cl[1])+P(mir(sl),cl[2]);
+  if(sp.hold)s+=E[sp.hold](hx,hy+98,24,p);
+  s+=P(circ(hx-11,hy+126,8,7,10),sk,1.5)+P(circ(hx+11,hy+126,8,7,10),sk2,1.5)}
+ // hood / helm
+ if(sp.hood||sp.helm){const hcol=sp.helm?['#8a90a0','#b8bfcc','#dde2ea']:cl,
+   o=[[hx-40,hy+62],[hx-36,hy+20],[hx-30,hy-18],[hx-16,hy-36],[hx,hy-40],[hx+16,hy-36],[hx+30,hy-18],[hx+36,hy+20],[hx+40,hy+62]],
+   n=[[hx-20,hy+40],[hx-23,hy+10],[hx-21,hy-12],[hx-12,hy-26],[hx,hy-29],[hx+12,hy-26],[hx+21,hy-12],[hx+23,hy+10],[hx+20,hy+40]];
+  s+=P(n,shade(hcol[0],-.4),1.4)+grid(poly(o),poly(n),1,10,(i,j)=>hcol[j%3],1.7);
+  if(sp.helm)s+=P([[hx-4,hy-40],[hx+4,hy-40],[hx+14,hy-62],[hx+2,hy-56]],'#e8344e',1.3)}
+ // face
+ s+=P(circ(hx,hy,20,25,28),sk,1.8);
+ s+=line(`M${hx-13} ${hy+1}Q${hx-8} ${hy+5} ${hx-3} ${hy+1}M${hx+3} ${hy+1}Q${hx+8} ${hy+5} ${hx+13} ${hy+1}`,1.6);
+ s+=`<path d="M${hx-13} ${hy-5}Q${hx-8} ${hy-8} ${hx-3} ${hy-5}M${hx+3} ${hy-5}Q${hx+8} ${hy-8} ${hx+13} ${hy-5}" fill="none" stroke-width="1" opacity=".55"/>`;
+ s+=line(`M${hx} ${hy+3}L${hx-1.5} ${hy+11}L${hx+1.5} ${hy+12}`,1.1)+line(`M${hx-4} ${hy+17}Q${hx} ${hy+19.5} ${hx+4} ${hy+17}`,1.3);
+ // fringe
+ if(!sp.hood&&!sp.helm){s+=grid(arcF(hx,hy-2,23,30,Math.PI*200/180,Math.PI*340/180),poly([[hx-21,hy-6],[hx-12,hy-12],[hx,hy-10],[hx+12,hy-12],[hx+21,hy-6]]),1,6,(i,j)=>hc[(j+1)%4],1.6)}
+ if(sp.crown)s+=crown(hx,hy-26,p);
+ return s}
 // Deity figure (full body: head, torso, two arms with hands + fingers, two legs with feet).
 // sp.male: broad bare-chested male body (dhoti, sash, garland, short hair) · otherwise the female sari/gown body.
 // sp.pose: hold | pray | bless (right palm raised) | warrior (weapon raised) | bow (archer) | flute | sit (cross-legged on a lotus)
@@ -164,7 +203,7 @@ function pips(c,p){const sz=c.pips===1?60:c.pips<=3?30:c.pips<=6?26:21;let s='';
 
 // mode: "all" = whole picture, "bg" = everything except the subject, "fg" = only the subject (figure / emblem / pips + foot flowers),
 // so the 3D carousel can pop the character out of its card. The rng runs identically in every mode, so the layers line up.
-function art(c,mode="all"){const p=c.pal,r=rng32(c.seed);let s="",fg="";const fig=c.fig;
+function art(c,mode="all"){const p=c.pal,r=rng32(c.seed);let s="",fg="";const fig=c.fig,tarot=c.deck==="tarot",FIG=tarot?figureT:figure;
  s+=bgMosaic(272,390,fig?[136,128]:[136,212],p,r);
  s+=archDraw(p);
  s+=fig?halo(136,128,46,p):halo(136,214,c.pips>1?100:84,p);
@@ -172,15 +211,15 @@ function art(c,mode="all"){const p=c.pal,r=rng32(c.seed);let s="",fg="";const fi
  if(c.top)s+=E[c.top](136,56,16,p);
  if(fig){if(fig.twin){const place=(g,dx,k)=>`<g transform="translate(${dx} 0) translate(136 392) scale(${k}) translate(-136 -392)">${g}</g>`;
    fg+=place(figure(Object.assign({},fig,fig.twin[0]),p,r),-47,.8)+place(figure(Object.assign({},fig,fig.twin[1]),p,r),47,.8)}
-  else fg+=figure(fig,p,r)}
+  else fg+=FIG(fig,p,r)}
  else if(c.center)fg+=E[c.center](136,214,c.center==="tower"?70:62,p);
  else if(c.pips)fg+=pips(c,p);
  const ff=footFlowers(p,r);
  const post=pillars()+rosette(34,40,26,p)+rosette(238,40,26,p)+`<rect x="108" y="1" width="56" height="24" rx="5" fill="#120c24" stroke="#c9ced9" stroke-width="2"/>`;
  if(mode==="spirit"){if(fig)return fg; // avatar for cards without a person: a robed figure holding the card's own symbol, its symbols glowing behind
   const hk=["gold","brown","auburn","black","silver","white"][c.seed%6],p2=Object.assign({},p,{hair:HAIR[hk]}),r2=rng32(c.seed+11);
-  return `<g opacity=".6">${fg}</g>`+figure({pose:"hold",hold:c.center||c.em,crown:c.seed%3===0},p2,r2)}
- return mode==="fg"?fg:mode==="bg"?s+ff+post:s+ff+fg+post}
+  return `<g opacity=".6">${fg}</g>`+FIG({pose:"hold",hold:c.center||c.em,crown:c.seed%3===0},p2,r2)}
+ return mode==="fg"?fg:mode==="bg"?s+ff+post:tarot?s+fg+ff+post:s+ff+fg+post}
 
 const SILVER=`<linearGradient id="sv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6f8fc"/><stop offset=".18" stop-color="#a3a9b7"/><stop offset=".35" stop-color="#eceff5"/><stop offset=".52" stop-color="#868c9b"/><stop offset=".7" stop-color="#dde1e9"/><stop offset=".86" stop-color="#9ba1af"/><stop offset="1" stop-color="#f1f3f8"/></linearGradient>`;
 const FRAME=`<rect width="300" height="500" rx="18" fill="url(#sv)"/><rect x="6" y="6" width="288" height="488" rx="13" fill="none" stroke="#6b7182" stroke-width="1.2"/><rect x="8.5" y="8.5" width="283" height="483" rx="11" fill="none" stroke="#fff" stroke-opacity=".6"/>`;

@@ -1,8 +1,9 @@
 // Export every card as print-ready JPGs, one file per side: cards_jpg/NN_name_front.jpg and NN_name_back.jpg
-// Usage:  node tools/export_cards.cjs [width=750]      (uses the Chrome installed on this machine)
+// Usage:  node tools/export_cards.cjs [width=750] [deity|tarot]   → cards_jpg/<deck>/   (uses the Chrome installed on this machine)
 const fs=require('fs'),path=require('path'),puppeteer=require('puppeteer-core');
 const CHROME=['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(p=>fs.existsSync(p));
-const W=+(process.argv[2]||750),OUT=path.join(__dirname,'..','cards_jpg'),PAGE='file:///'+path.join(__dirname,'..','index.html').replace(/\\/g,'/')+'#card=0&export';
+const DECK=process.argv[3]==='tarot'?'tarot':'deity';
+const W=+(process.argv[2]||750),OUT=path.join(__dirname,'..','cards_jpg',DECK),PAGE='file:///'+path.join(__dirname,'..','index.html').replace(/\\/g,'/')+'?deck='+DECK+'#card=0&export';
 (async()=>{
  if(!CHROME)throw new Error('Chrome/Edge not found');
  fs.mkdirSync(OUT,{recursive:true});

@@ -1,7 +1,26 @@
-
-// ---------- build the deity deck (data in 4_deities.js) ----------
+// ---------- two decks: เทพ (data in 4_deities.js) and ไพ่ทาโรต์ 78 ใบ (4_major.js / 5_minorA.js / 6_minorB.js) ----------
+// The active deck is chosen per page load: ?deck=tarot | ?deck=deity, otherwise the last one used (localStorage), otherwise เทพ.
+const DECKS={deity:{name:"ไพ่เทพ",title:"ไพ่เทพกระจกสีโฮโลแกรม"},tarot:{name:"ไพ่ทาโรต์",title:"ไพ่ทาโรต์กระจกสีโฮโลแกรม"}};
+const DECK_ID=(()=>{let q=null;try{q=new URLSearchParams(location.search).get("deck")}catch(_){}
+ if(!DECKS[q])try{q=localStorage.getItem("arcana_deck")}catch(_){}
+ if(!DECKS[q])q="deity";try{localStorage.setItem("arcana_deck",q)}catch(_){}return q})();
+function switchDeck(id){try{localStorage.setItem("arcana_deck",id)}catch(_){}const u=new URL(location.href);u.searchParams.set("deck",id);u.hash="";location.href=u.href}
+// tarot grades on the same C/R/SR/UR/SP scale as the deities
+const TAROT_SP=new Set([0,21]),TAROT_UR=new Set([1,2,3,4,6,10,13,17,18,19]); // SP: Fool, World · UR: Magician, High Priestess, Empress, Emperor, Lovers, Wheel, Death, Star, Moon, Sun
+const tarotRar=i=>{if(i<22)return TAROT_SP.has(i)?4:TAROT_UR.has(i)?3:2;const r=(i-22)%14;return r>=12?2:(r===0||r>=10)?1:0}; // Q/K=SR · Ace/Page/Knight=R · 2–10=C
+const RANKS=[["ACE","เอซ","I",1],["TWO","สอง","II",2],["THREE","สาม","III",3],["FOUR","สี่","IV",4],["FIVE","ห้า","V",5],["SIX","หก","VI",6],
+ ["SEVEN","เจ็ด","VII",7],["EIGHT","แปด","VIII",8],["NINE","เก้า","IX",9],["TEN","สิบ","X",10],["PAGE","เพจ","P",0],["KNIGHT","อัศวิน","Kn",0],["QUEEN","ราชินี","Q",0],["KING","ราชา","K",0]];
 const deck=[];
-DEITIES.forEach(([en,th,cat,theme,sp,bless,F,rar,no])=>deck.push(Object.assign({en,roman:toRoman(no),th,cat,group:'เทพ · '+CATS[cat].short,bless,rar,pal:mkPal(theme,sp.fig&&sp.fig.hair),F:F.split('|'),seed:no*7919+13},sp)));
+if(DECK_ID==="tarot"){
+ MAJOR.forEach(([en,ro,th,theme,sp,F],i)=>deck.push(Object.assign({deck:"tarot",en,roman:ro,th,cat:0,group:"ไพ่ชุดใหญ่",pal:mkPal(theme,sp.fig&&sp.fig.hair),F:F.split("|"),seed:i*7919+13},sp)));
+ SUITS.forEach((su,si)=>RANKS.forEach(([ren,rth,ro,n],ri)=>{
+  const c={deck:"tarot",en:`${ren} OF ${su.en}`,roman:ro,th:rth+su.th,cat:1+si,group:"ไพ่ชุดเล็ก · "+su.th,F:su.F[ri].split("|"),seed:(22+si*14+ri)*7919+13,em:su.em,top:su.em};
+  if(n)c.pips=n;else{const hair=["gold",null,"auburn","brown"][ri-10];c.fig={pose:"hold",hair,crown:ri>=12,helm:ri===11,hold:su.em}}
+  c.pal=mkPal(su.theme,c.fig&&c.fig.hair);deck.push(c)}));
+ deck.forEach((c,i)=>c.rar=tarotRar(i));
+}else DEITIES.forEach(([en,th,cat,theme,sp,bless,F,rar,no])=>deck.push(Object.assign({deck:"deity",en,roman:toRoman(no),th,cat,group:"เทพ · "+CATS[cat].short,bless,rar,pal:mkPal(theme,sp.fig&&sp.fig.hair),F:F.split("|"),seed:no*7919+13},sp)));
+// picker groups: [heading, cat]
+const DECK_GROUPS=DECK_ID==="tarot"?[["ไพ่ชุดใหญ่ (Major Arcana)",0]].concat(SUITS.map((su,k)=>["ไพ่ชุดเล็ก · "+su.th,1+k])):CATS.map((c,k)=>[c.th,k]);
 
 // ---------- DOM ----------
 const stage=$('#stage'),cardEl=$('#card'),floatEl=$('#float'),front=$('#front'),artImg=$('#art'),numEl=$('#numeral'),nameEl=$('#name'),
@@ -26,7 +45,7 @@ const fitFortune=()=>fit(ftext,Math.min(cw*.06,fortBox.clientHeight/1.75),fortBo
 
 let cur=2,revealed=false,locked=false,spinning=null,lastText='';const lastF={};
 function applyCard(i){cur=i;const c=deck[i];artImg.src=faceURL(i);numEl.textContent=c.roman;nameEl.textContent=c.en;
- info.textContent=c.roman+' · '+c.th+' — '+c.bless;cardEl.setAttribute('aria-label',`ไพ่ ${c.th} (${c.en}) แตะเพื่อเปิดคำทำนาย`);fitName()}
+ info.textContent=(c.deck==="tarot"?(c.roman&&!c.fig||i<22?c.roman+' · ':'')+c.th+' — '+c.group:c.roman+' · '+c.th+' — '+c.bless);cardEl.setAttribute('aria-label',`ไพ่ ${c.th} (${c.en}) แตะเพื่อเปิดคำทำนาย`);fitName()}
 function pickF(i){const F=deck[i].F;let k,n=0;do{k=Math.floor(Math.random()*F.length)}while(n++<50&&(k===lastF[i]||F[k]===lastText));lastF[i]=k;lastText=F[k];return F[k]}
 function setHint(){hint.textContent=!revealed?'แตะไพ่เพื่อเปิดคำทำนาย':(locked||useSpread())&&!locked?'แตะไพ่ = คำทำนายใหม่ · 🔮 = จั่วใบใหม่ (ใบนี้เข้ากอง)':locked?'แตะอีกครั้ง เพื่อรับคำทำนายใหม่จากไพ่ใบนี้':'แตะอีกครั้ง เพื่อสุ่มไพ่ใบใหม่จากสำรับ'}
 const fire=el=>{el.classList.remove('go');void el.offsetWidth;el.classList.add('go')};
