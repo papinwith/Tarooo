@@ -9,7 +9,7 @@ const W=+(process.argv[2]||750),OUT=path.join(__dirname,'..','cards_jpg'),PAGE='
  const br=await puppeteer.launch({executablePath:CHROME,headless:'new',args:['--disable-gpu']});
  const pg=await br.newPage();await pg.goto(PAGE,{waitUntil:'load'});
  await pg.waitForFunction('typeof exportCardJPG==="function"');
- const cards=await pg.evaluate(()=>deck.map((c,i)=>({i,en:c.en,rar:['C','U','R','SR'][c.rar]})));
+ const cards=await pg.evaluate(()=>deck.map((c,i)=>({i,en:c.en,rar:['C','R','SR','UR','SP'][c.rar]})));
  const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
  for(const c of cards){
   for(const side of ['front','back']){

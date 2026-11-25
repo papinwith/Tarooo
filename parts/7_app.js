@@ -1,13 +1,7 @@
 
-// ---------- build the 78-card deck ----------
-const RANKS=[['ACE','เอซ','I',1],['TWO','สอง','II',2],['THREE','สาม','III',3],['FOUR','สี่','IV',4],['FIVE','ห้า','V',5],['SIX','หก','VI',6],
- ['SEVEN','เจ็ด','VII',7],['EIGHT','แปด','VIII',8],['NINE','เก้า','IX',9],['TEN','สิบ','X',10],['PAGE','เพจ','P',0],['KNIGHT','อัศวิน','Kn',0],['QUEEN','ราชินี','Q',0],['KING','ราชา','K',0]];
+// ---------- build the deity deck (data in 4_deities.js) ----------
 const deck=[];
-MAJOR.forEach(([en,ro,th,theme,sp,F],i)=>deck.push(Object.assign({en,roman:ro,th,group:'ไพ่ชุดใหญ่',pal:mkPal(theme,sp.fig&&sp.fig.hair),F:F.split('|'),seed:i*7919+13},sp)));
-SUITS.forEach((su,si)=>RANKS.forEach(([ren,rth,ro,n],ri)=>{
- const c={en:`${ren} OF ${su.en}`,roman:ro,th:rth+su.th,group:'ไพ่ชุดเล็ก · '+su.th,F:su.F[ri].split('|'),seed:(22+si*14+ri)*7919+13,em:su.em,top:su.em};
- if(n)c.pips=n;else{const hair=['gold',null,'auburn','brown'][ri-10];c.fig={pose:'hold',hair,crown:ri>=12,helm:ri===11,hold:su.em}}
- c.pal=mkPal(su.theme,c.fig&&c.fig.hair);deck.push(c)}));
+DEITIES.forEach(([en,th,cat,theme,sp,bless,F,rar,no])=>deck.push(Object.assign({en,roman:toRoman(no),th,cat,group:'เทพ · '+CATS[cat].short,bless,rar,pal:mkPal(theme,sp.fig&&sp.fig.hair),F:F.split('|'),seed:no*7919+13},sp)));
 
 // ---------- DOM ----------
 const stage=$('#stage'),cardEl=$('#card'),floatEl=$('#float'),front=$('#front'),artImg=$('#art'),numEl=$('#numeral'),nameEl=$('#name'),
@@ -32,7 +26,7 @@ const fitFortune=()=>fit(ftext,Math.min(cw*.06,fortBox.clientHeight/1.75),fortBo
 
 let cur=2,revealed=false,locked=false,spinning=null,lastText='';const lastF={};
 function applyCard(i){cur=i;const c=deck[i];artImg.src=faceURL(i);numEl.textContent=c.roman;nameEl.textContent=c.en;
- info.textContent=(c.roman&&!c.fig||i<22?c.roman+' · ':'')+c.th+' — '+c.group;cardEl.setAttribute('aria-label',`ไพ่ ${c.th} (${c.en}) แตะเพื่อเปิดคำทำนาย`);fitName()}
+ info.textContent=c.roman+' · '+c.th+' — '+c.bless;cardEl.setAttribute('aria-label',`ไพ่ ${c.th} (${c.en}) แตะเพื่อเปิดคำทำนาย`);fitName()}
 function pickF(i){const F=deck[i].F;let k,n=0;do{k=Math.floor(Math.random()*F.length)}while(n++<50&&(k===lastF[i]||F[k]===lastText));lastF[i]=k;lastText=F[k];return F[k]}
 function setHint(){hint.textContent=!revealed?'แตะไพ่เพื่อเปิดคำทำนาย':(locked||useSpread())&&!locked?'แตะไพ่ = คำทำนายใหม่ · 🔮 = จั่วใบใหม่ (ใบนี้เข้ากอง)':locked?'แตะอีกครั้ง เพื่อรับคำทำนายใหม่จากไพ่ใบนี้':'แตะอีกครั้ง เพื่อสุ่มไพ่ใบใหม่จากสำรับ'}
 const fire=el=>{el.classList.remove('go');void el.offsetWidth;el.classList.add('go')};
@@ -70,9 +64,9 @@ function arcSpin(done){const w=stage.clientWidth,h=stage.clientHeight,ch=cw*5/3,
 const useSpread=()=>!!X3;let order=[],bag=[];const deckLeft=$("#deckLeft");
 const showCardEl=()=>{cardEl.style.transition='none';cardEl.style.visibility='';cardEl.style.opacity='1';requestAnimationFrame(()=>cardEl.style.transition='')};
 function deal(){FX.clearAura();const end=()=>{busy=false;shBtn.disabled=false;shBtn.classList.remove('busy');stage.classList.remove('shuffling')};
- // draw from the WHOLE deck like a real one: every one of the 78 cards comes up once before the deck is reshuffled
+ // draw from the WHOLE deck like a real one: every one of the cards comes up once before the deck is reshuffled
  const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
- if(!bag.length){if(pileHist&&pileHist.length){pileHist.length=0;renderPile();toast('🔄 เก็บไพ่ทั้ง 78 ใบกลับเข้าสำรับ แล้วสับใหม่')}bag=shuf(deck.map((_,i)=>i));if(bag[bag.length-1]===cur&&bag.length>1)[bag[0],bag[bag.length-1]]=[bag[bag.length-1],bag[0]]}
+ if(!bag.length){if(pileHist&&pileHist.length){pileHist.length=0;renderPile();toast(`🔄 เก็บไพ่ทั้ง ${deck.length} ใบกลับเข้าสำรับ แล้วสับใหม่`)}bag=shuf(deck.map((_,i)=>i));if(bag[bag.length-1]===cur&&bag.length>1)[bag[0],bag[bag.length-1]]=[bag[bag.length-1],bag[0]]}
  const win=bag.pop(),others=shuf(deck.map((_,i)=>i).filter(i=>i!==win));
  // only a handful of cards go on the carousel (not the whole deck)
  const n=stage.clientWidth<600?7:9,ids=others.slice(0,n-1),k=Math.floor(Math.random()*n);ids.splice(k,0,win);
