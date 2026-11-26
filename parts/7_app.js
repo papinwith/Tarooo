@@ -52,7 +52,7 @@ const fire=el=>{el.classList.remove('go');void el.offsetWidth;el.classList.add('
 function showFortune(t){fortBox.classList.add('lit');ftext.textContent=t;fitFortune();ftext.classList.remove('show');void ftext.offsetWidth;ftext.classList.add('show');live.textContent=deck[cur].th+': '+t}
 
 let holo=.25,holoT=.25,spinDeg=0,lastInteract=0,lastPulse=0;
-function tap(){if(spinning||busy)return;lastInteract=performance.now();let next=cur;
+function tap(){if(spinning||busy||CINE.active())return;lastInteract=performance.now();let next=cur;
  if(revealed&&!locked&&!useSpread()){do{next=Math.floor(Math.random()*deck.length)}while(next===cur)}
  const o={to:next,text:pickF(next),reveal:true};
  // 3D: น้องหวานจิบิ walks over and swipes the card; the card spins at the moment her hand hits it
@@ -96,7 +96,7 @@ function deal(){FX.clearAura();const end=()=>{busy=false;shBtn.disabled=false;sh
    setTimeout(()=>X3.pick(),300)},
   slot=>{busy=true;locked=false;spinning=null;spinDeg=0;const idx=ids[slot],o={to:idx,text:pickF(idx),reveal:true,big:true};applyCard(idx);showCardEl();
    finish(o);end()})}
-function shuffle(initial){if(spinning||busy)return;lastInteract=performance.now();
+function shuffle(initial){if(spinning||busy||CINE.active())return;lastInteract=performance.now();
  if(useSpread()){if(X3.state()==='ready'){X3.hideSpread(deal);return}if(X3.state()!=='none')return;
   busy=true;locked=false;shBtn.disabled=true;shBtn.classList.add('busy');
   if(initial===true||cardEl.style.visibility==='hidden'){deal();return}
@@ -114,7 +114,12 @@ function shuffle(initial){if(spinning||busy)return;lastInteract=performance.now(
  // fallback without WebGL: the 2D rainbow arc spinner
  spin(0,180,420,null,()=>{cardEl.style.opacity='0';hideT=setTimeout(()=>cardEl.style.visibility='hidden',320);arcSpin(reveal)})}
 shBtn.addEventListener('click',()=>shuffle());
-function finish(o){if(o.reveal){revealed=true;holoT=1;lastPulse=performance.now();fire(sweep);fire(beam);FX.celebrate(!!o.big);FX.aura(deck[o.to],!!o.big);setTimeout(()=>showFortune(o.text),240)}
+function revealNow(o){revealed=true;holoT=1;lastPulse=performance.now();fire(sweep);fire(beam);FX.celebrate(!!o.big);FX.aura(deck[o.to],!!o.big);setTimeout(()=>showFortune(o.text),240)}
+function finish(o){if(o.reveal){
+  // UR / SP: a full-screen scene of its own plays first; the card appears at its climax (tap anywhere to skip ahead)
+  if(deck[o.to].rar>=3){cardEl.style.transition='none';cardEl.style.opacity='0';hint.innerHTML='✦ กำลังจุติ<span class="dots"></span> ✦';
+   const ok=CINE.play(deck[o.to],()=>{showCardEl();revealNow(o)},()=>setHint());if(ok)return;showCardEl()}
+  revealNow(o)}
  else{revealed=false;floatEl.classList.add('idle')}setHint()}
 
 // ---------- pointer / keyboard ----------

@@ -3,7 +3,7 @@
  // softer 4-step toon shading, warmer chestnut hair, pink rim light
  // smooth shading: the toon ramp is sampled with linear filtering, so light blends softly instead of hard bands
  gm.image={data:new Uint8Array([105,150,195,228,250]),width:5,height:1};gm.minFilter=gm.magFilter=THREE.LinearFilter;gm.needsUpdate=true;
- mHair.color.setHex(0x5a2c18);mHair2.color.setHex(0x70391f);mSkin.color.setHex(0xffcfb8);
+ mHair.color.setHex(0x7d4b30);mHair2.color.setHex(0x9a6242);mSkin.color.setHex(0xffcfb8);
  const rimP=new THREE.DirectionalLight(0xffb8e8,.7);rimP.position.set(-3,4,-6);scene.add(rimP);
  const nm=o=>Object.assign({outline:false,shadow:false},o||{});
 

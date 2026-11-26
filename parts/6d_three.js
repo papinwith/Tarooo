@@ -23,11 +23,12 @@ const X3=(()=>{
  const pickables=[];
  function mk(geo,mat,parent,pos,o){o=o||{};const m=new THREE.Mesh(geo,mat);if(pos)m.position.set(pos[0],pos[1],pos[2]);if(o.rot)m.rotation.set(o.rot[0],o.rot[1],o.rot[2]);
   if(o.scale)m.scale.set(o.scale[0],o.scale[1],o.scale[2]);m.castShadow=o.shadow!==false;parent.add(m);pickables.push(m);
-  if(o.outline!==false)m.add(new THREE.Mesh(hull(geo,o.ow||.014),OUT));return m}
+  if(o.outline!==false)m.add(new THREE.Mesh(hull(geo,o.ow||.014),o.om||OUT));return m}
+ const SOFT=new THREE.MeshBasicMaterial({color:0x7a4a3a,side:THREE.BackSide}); // warm, thin outline for hair & hat (less harsh than the dark one)
  const S=(r,w,h)=>new THREE.SphereGeometry(r,w||28,h||20),G=()=>new THREE.Group();
 
  // ---------- หวาน (≈3.5 units tall incl. hat, +Z = her front): a 21-year-old young woman, same anime face as before ----------
- const mSkin=toon(0xffe2d2),mHair=toon(0x3e1e10),mHair2=toon(0x52291a),mWhite=toon(0xfbf7f2),mLace=toon(0xf1e9e0),mRed=toon(0xd8283a),
+ const mSkin=toon(0xffe2d2),mHair=toon(0x7d4b30),mHair2=toon(0x9a6242),mHatRed=toon(0xe04a58),mFur=toon(0xfff4ec),mWhite=toon(0xfbf7f2),mLace=toon(0xf1e9e0),mRed=toon(0xd8283a),
   mGold=toon(0xe9bd52,{emissive:0x3a2800}),mShoe=toon(0xc0302a),mEye=new THREE.MeshBasicMaterial({color:0x2b1a2e}),mIris=new THREE.MeshBasicMaterial({color:0x6a3a24}),
   mShine=new THREE.MeshBasicMaterial({color:0xffffff}),mBlush=new THREE.MeshBasicMaterial({color:0xff7f9a,transparent:true,opacity:.45,depthWrite:false}),mLip=new THREE.MeshBasicMaterial({color:0xb0444e});
  const root=G(),body=G();scene.add(root);root.add(body);
@@ -51,15 +52,21 @@ const X3=(()=>{
  const HC=[0,.48,0];
  mk(S(.52,48,36),mSkin,head,HC,{scale:[.94,1,.96],ow:.012});
  // hair: smooth crown, soft side-swept fringe, and one smooth wavy sheet falling down the back (no separate strings)
- mk(new THREE.SphereGeometry(.56,48,28,0,Math.PI*2,0,1.5),mHair,head,HC,{rot:[-.38,0,0],ow:.012});
- [-.3,-.12,.06,.24].forEach((x,i)=>{const y=.2-Math.abs(x)*.25,z=Math.sqrt(Math.max(.02,.3-x*x-y*y));mk(S(.16,24,18),i%2?mHair2:mHair,head,[x,HC[1]+y,z-.04],{scale:[1.25,.7,.5],rot:[0,x*1.3,-.35]})});
+ mk(new THREE.SphereGeometry(.56,48,28,0,Math.PI*2,0,1.5),mHair,head,HC,{rot:[-.38,0,0],ow:.007,om:SOFT});
+ // fringe: seven overlapping soft locks that sweep to one side, alternating two tones
+ [-.36,-.24,-.12,0,.12,.24,.36].forEach((x,i)=>{const y=.2-Math.abs(x)*.25+(i%2)*.025,z=Math.sqrt(Math.max(.02,.3-x*x-y*y));
+  mk(S(.15,24,18),i%2?mHair2:mHair,head,[x,HC[1]+y,z-.04],{scale:[1.05,.78,.5],rot:[0,x*1.3,-.25-x*.9],ow:.006,om:SOFT})});
  {const nu=56,nv=40,A0=2.45,LEN=2.15,pos=[],ind=[];
   for(let j=0;j<=nv;j++){const v=j/nv;for(let i=0;i<=nu;i++){const u=i/nu,a=-A0+2*A0*u,edge=Math.pow(Math.abs(a)/A0,3);
    const r=.53+.12*Math.min(1,v*3)+.07*v+.03*Math.sin(v*9+a*1.5)*v-edge*.05,y=HC[1]+.36-LEN*v+edge*.25*v,curl=v>.9?(v-.9)*1.2:0;
    pos.push(Math.sin(a)*(r-curl),y,-Math.cos(a)*(r-curl)*.92+edge*.1)}}
   for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){const a=j*(nu+1)+i,b=a+nu+1;ind.push(a,b,a+1,b,b+1,a+1)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(ind);g.computeVertexNormals();
-  const hm=mHair.clone();hm.side=THREE.DoubleSide;mk(g,hm,head,[0,0,0],{outline:false})}
+  // soft gradient: darker at the roots, warm light caramel toward the tips
+  const c0=new THREE.Color(0x6f4029),c1=new THREE.Color(0xb98058),cc=new THREE.Color(),col=[];
+  for(let j=0;j<=nv;j++){cc.copy(c0).lerp(c1,Math.pow(j/nv,1.3));for(let i=0;i<=nu;i++)col.push(cc.r,cc.g,cc.b)}
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  const hm=toon(0xffffff,{vertexColors:true,side:THREE.DoubleSide});mk(g,hm,head,[0,0,0],{outline:false})}
  // face
  for(const s of[-1,1]){const e=mk(S(.1),mEye,head,[s*.19,HC[1]+.02,.465],{scale:[.72,1,.35],outline:false,shadow:false});
   mk(S(.07),mIris,e,[0,-.035,.06],{scale:[1,.8,.6],outline:false,shadow:false});
@@ -68,9 +75,20 @@ const X3=(()=>{
  mk(new THREE.TorusGeometry(.05,.012,8,16,Math.PI),mLip,head,[0,HC[1]-.15,.5],{rot:[0,0,Math.PI],outline:false,shadow:false});
  // santa hat
  const hat=G();hat.position.set(0,HC[1]+.36,-.05);hat.rotation.set(-.3,0,-.12);head.add(hat);
- mk(new THREE.TorusGeometry(.47,.09,20,48),mWhite,hat,[0,0,0],{rot:[Math.PI/2,0,0]});
- const cone=mk(new THREE.ConeGeometry(.45,.8,40),mRed,hat,[.05,.4,-.03],{rot:[-.25,0,-.25]});
- mk(S(.13),mWhite,cone,[0,.42,0]);
+ // fluffy fur brim: a soft torus plus a ring of little puffs so the edge isn't a perfect hard circle
+ mk(new THREE.TorusGeometry(.47,.085,20,48),mFur,hat,[0,0,0],{rot:[Math.PI/2,0,0],ow:.007,om:SOFT});
+ for(let i=0;i<20;i++){const a=i/20*Math.PI*2,s=.075+.018*Math.sin(i*2.7);mk(S(s,14,10),mFur,hat,[Math.sin(a)*.47,.012*Math.sin(i*3.1),Math.cos(a)*.47],{outline:false})}
+ // floppy cap: a tapered, wobbly tube that bends over and droops backwards, with a fluffy pom-pom at the tip
+ {const cv=new THREE.CatmullRomCurve3([new V(0,0,0),new V(.02,.3,.0),new V(.1,.52,-.06),new V(.26,.62,-.18),new V(.42,.52,-.3),new V(.5,.34,-.36)]);
+  const N=32,M=28,fr=cv.computeFrenetFrames(N,false),pos=[],nor=[],ind=[];
+  for(let i=0;i<=N;i++){const t=i/N,p=cv.getPoint(t),r=(.44*Math.pow(1-t,.9)+.045)*(1+.035*Math.sin(t*15));
+   for(let j=0;j<=M;j++){const a=j/M*Math.PI*2,n=fr.normals[i].clone().multiplyScalar(Math.cos(a)).add(fr.binormals[i].clone().multiplyScalar(Math.sin(a)));
+    pos.push(p.x+n.x*r,p.y+n.y*r,p.z+n.z*r);nor.push(n.x,n.y,n.z)}}
+  for(let i=0;i<N;i++)for(let j=0;j<M;j++){const a=i*(M+1)+j,b=a+M+1;ind.push(a,a+1,b,b,a+1,b+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setIndex(ind);
+  const cap=mk(g,mHatRed,hat,[0,0,0],{ow:.008,om:SOFT});cap.material.side=THREE.DoubleSide;
+  const e=cv.getPoint(1);mk(S(.12,20,14),mFur,hat,[e.x,e.y-.02,e.z],{ow:.007,om:SOFT});
+  for(let k=0;k<6;k++){const a=k*1.05;mk(S(.06,10,8),mFur,hat,[e.x+Math.sin(a)*.1,e.y-.02+Math.cos(a*1.7)*.05,e.z+Math.cos(a)*.1],{outline:false})}}
 
  // ---------- the 3D rainbow card wheel ----------
  const wheel=G(),ring=G();wheel.add(ring);wheel.visible=false;scene.add(wheel);
